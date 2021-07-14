@@ -11,6 +11,8 @@ import System.FilePath
 
 import System.Directory
 
+import System.Environment
+
 import Control.Applicative
 
 data Cus' a b c = L c | W a b
@@ -69,9 +71,10 @@ compilerOpts argv =
         (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
     where header = "Usage: ic [OPTION...] files..."
 
-update :: String -> IO()
-update path = do
-    (options, _) <- compilerOpts [path]
+update :: IO()
+update = do
+    path <- getArgs
+    (options, _) <- compilerOpts path
     case optInput options of
         Just p -> do
             paths <- fmap  (fmap $ mappend $ normalise p ++ "\\") (listDirectory $ normalise p)
