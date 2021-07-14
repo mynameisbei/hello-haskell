@@ -3,16 +3,12 @@ module Lib where
 import System.Console.GetOpt
 import Data.Maybe ( fromMaybe )
 import Data.Char
+import Data.Foldable
 import System.IO
-
 import System.Process
-
 import System.FilePath
-
 import System.Directory
-
 import System.Environment
-
 import Control.Applicative
 
 data Cus' a b c = L c | W a b
@@ -76,10 +72,11 @@ update = do
     path <- getArgs
     (options, _) <- compilerOpts path
     case optInput options of
-        Just p -> do
-            paths <- fmap  (fmap $ mappend $ normalise p ++ "\\") (listDirectory $ normalise p)
-            traverse exec paths
+        Just p -> getPaths p >>= traverse_ exec
     return ()
+
+getPaths :: FilePath -> IO[FilePath]
+getPaths path = fmap  (fmap $ mappend $ normalise path ++ "\\") (listDirectory $ normalise path)
 
 exec :: FilePath -> IO[()]
 exec path = traverse exec' [["reset", "--hard"], ["clean", "-df"], ["pull"]]
