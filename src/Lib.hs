@@ -10,6 +10,7 @@ import System.FilePath
 import System.Directory
 import System.Environment
 import Control.Applicative
+import Control.Monad
 
 data Cus' a b c = L c | W a b
     deriving(Show)
@@ -74,6 +75,10 @@ update = do
     case optInput options of
         Just p -> getPaths p >>= traverse_ exec
     return ()
+
+update' :: IO()
+update' = getArgs >>= compilerOpts >>= i >>= traverse_ exec >> return ()
+    where i (options, _) = getPaths $ msum $ optInput options
 
 getPaths :: FilePath -> IO[FilePath]
 getPaths path = fmap  (fmap $ mappend $ normalise path ++ "\\") (listDirectory $ normalise path)
