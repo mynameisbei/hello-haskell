@@ -4,6 +4,7 @@ import System.Console.GetOpt
 import Data.Maybe ( fromMaybe )
 import Data.Char
 import Data.Foldable
+import Data.Functor
 import System.IO
 import System.Process
 import System.FilePath
@@ -77,15 +78,15 @@ update = do
     return ()
 
 update' :: IO()
-update' = getArgs >>= compilerOpts >>= i >>= traverse_ exec >> return ()
+update' = getArgs >>= compilerOpts >>= i >>= mapM_ exec
     where i (options, _) = getPaths $ msum $ optInput options
 
 getPaths :: FilePath -> IO[FilePath]
-getPaths path = fmap  (fmap $ mappend $ normalise path ++ "\\") (listDirectory $ normalise path)
+getPaths path = fmap (mplus suff) <$> listDirectory p
+    where p     = normalise path
+          suff  = p ++ "\\"
 
-exec :: FilePath -> IO[()]
-exec path = traverse exec' [["reset", "--hard"], ["clean", "-df"], ["pull"]]
-    where exec' args = do
-            print path
-            createProcess (proc "git" args) { cwd = Just $ normalise path }
-            return ()
+exec :: FilePath -> IO()
+exec path = print path >> mapM_ exec' [["reset", "--hard"], ["clean", "-df"], ["pull"]]
+    where exec' args  = void (call args)
+          call  args  = createProcess (proc "git" args) { cwd = Just $ normalise path }
