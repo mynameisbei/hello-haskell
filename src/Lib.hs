@@ -82,7 +82,7 @@ update' = getArgs >>= compilerOpts >>= i >>= mapM_ exec
     where i (options, _) = getPaths $ msum $ optInput options
 
 getPaths :: FilePath -> IO[FilePath]
-getPaths path = fmap (mplus suff) <$> listDirectory p
+getPaths path = listDirectory p >>= filterM doesDirectoryExist . fmap (mplus suff)
     where p     = normalise path
           suff  = p ++ "\\"
 
